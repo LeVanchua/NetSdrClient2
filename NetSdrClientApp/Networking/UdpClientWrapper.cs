@@ -33,13 +33,12 @@ namespace NetSdrClientApp.Networking
                 {
                     UdpReceiveResult result = await _udpClient.ReceiveAsync(_cts.Token);
                     MessageReceived?.Invoke(this, result.Buffer);
-
                     Console.WriteLine($"Received from {result.RemoteEndPoint}");
                 }
             }
-            catch (OperationCanceledException ex)
+            catch (OperationCanceledException)
             {
-                //empty
+                // Expected when stopping
             }
             catch (Exception ex)
             {
@@ -47,21 +46,11 @@ namespace NetSdrClientApp.Networking
             }
         }
 
-        public void StopListening()
-        {
-            try
-            {
-                _cts?.Cancel();
-                _udpClient?.Close();
-                Console.WriteLine("Stopped listening for UDP messages.");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error while stopping: {ex.Message}");
-            }
-        }
+        public void StopListening() => Cleanup();
 
-        public void Exit()
+        public void Exit() => Cleanup();
+
+        private void Cleanup()
         {
             try
             {
@@ -78,10 +67,8 @@ namespace NetSdrClientApp.Networking
         public override int GetHashCode()
         {
             var payload = $"{nameof(UdpClientWrapper)}|{_localEndPoint.Address}|{_localEndPoint.Port}";
-
             using var md5 = MD5.Create();
             var hash = md5.ComputeHash(Encoding.UTF8.GetBytes(payload));
-
             return BitConverter.ToInt32(hash, 0);
         }
 
@@ -89,7 +76,6 @@ namespace NetSdrClientApp.Networking
         {
             if (ReferenceEquals(this, obj)) return true;
             if (obj is not UdpClientWrapper other) return false;
-
             return _localEndPoint.Address.Equals(other._localEndPoint.Address)
                    && _localEndPoint.Port == other._localEndPoint.Port;
         }
