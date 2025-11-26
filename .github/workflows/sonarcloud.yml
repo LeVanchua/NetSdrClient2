@@ -59,7 +59,7 @@ jobs:
           /k:"LeVanchua_NetSdrClient2" `
           /o:"levanchua" `
           /d:sonar.token="${{ secrets.SONAR_TOKEN }}" `
-          /d:sonar.cs.opencover.reportsPaths="TestResults/NetSdrClientApp.coverage.xml,TestResults/EchoServer11.coverage.xml" `
+          /d:sonar.cs.opencover.reportsPaths="**/TestResults/*.coverage.xml" `
           /d:sonar.cpd.cs.minimumTokens=40 `
           /d:sonar.cpd.cs.minimumLines=5 `
           /d:sonar.exclusions=**/bin/**,**/obj/**,**/sonarcloud.yml `
@@ -72,22 +72,24 @@ jobs:
         run: dotnet build NetSdrClient.sln -c Release --no-restore
       - name: Tests with coverage (OpenCover)
         run: |
-          New-Item -ItemType Directory -Force -Path "$PWD\TestResults" | Out-Null
+          New-Item -ItemType Directory -Force -Path "TestResults" | Out-Null
       
           # NetSdrClientApp
           dotnet test NetSdrClientAppTests/NetSdrClientAppTests.csproj -c Release --no-build `
             /p:CollectCoverage=true `
-            /p:CoverletOutput="$PWD\TestResults\NetSdrClientApp.coverage.xml" `
+            /p:CoverletOutput="TestResults/NetSdrClientApp.coverage.xml" `
             /p:CoverletOutputFormat=opencover `
             /p:Exclude="[EchoServer]*"
 
           # EchoServer
           dotnet test EchoServerTest1/EchoServerTest.csproj -c Release --no-build `
             /p:CollectCoverage=true `
-            /p:CoverletOutput="$PWD\TestResults\EchoServer11.coverage.xml" `
+            /p:CoverletOutput="TestResults/EchoServer11.coverage.xml" `
             /p:CoverletOutputFormat=opencover `
             /p:Exclude="[*Tests]*"
 
+          # подивимось, що реально створилось
+          dir TestResults
         shell: pwsh
       # 3) END: SonarScanner
       - name: SonarScanner End
